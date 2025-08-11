@@ -1,0 +1,202 @@
+
+// ===Estilo do header===
+.Header {
+  // 1. Layout Flexível
+  display: flex;
+  justify-content: space-between; // Joga o título para a esquerda e a navegação para a direita
+  align-items: center;           // Alinha tudo verticalmente ao centro
+  
+  // 2. Dimensionamento e Posição
+  height: 10vh;                  // Garante que o header ocupe 10% da altura da tela, como o resto do layout
+  padding: 0 5%;                 // Espaçamento interno para que o conteúdo não cole nas bordas da tela
+  
+  // 3. Estilo Visual Coerente
+  background-color: rgba(0, 0, 0, 0.2); // Um fundo escuro e semi-transparente, combinando com a estética
+  box-shadow: 4px 4px 6px $sombra-padrao;  // Sombra sutil para dar profundidade e separar do conteúdo
+  font-family: $fonte-principal;
+  
+  // Estilo para o Título (<h1>Sylas</h1>)
+  h1 {
+    margin: 0; // Remove a margem padrão para um alinhamento perfeito
+    font-size: 1.8rem;
+    color: $cor-primaria;
+    font-weight: 500;
+  }
+  
+  // Container dos links de navegação
+  nav {
+    display: flex;
+    // 'gap' é a forma moderna e fácil de criar espaçamento entre os links.
+    // Para adicionar mais um link, basta adicioná-lo no JSX.
+    gap: 35px; 
+    
+    // Estilo para cada link (<Link>)
+    .Header-link {
+      color: $cor-texto-principal;
+      text-decoration: none; // Remove o sublinhado padrão
+      font-size: 1.1rem;
+      padding: 5px 0; // Adiciona uma área de clique maior
+      position: relative; // Necessário para o efeito de sublinhado
+      transition: color 0.3s ease;
+
+      // Efeito de sublinhado animado que aparece no hover
+      &::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: 0;
+        left: 0;
+        background-color: $cor-primaria; // Usa a cor de destaque do projeto
+        transform: scaleX(0); // Começa invisível
+        transform-origin: bottom right;
+        transition: transform 0.3s ease-out;
+      }
+
+      // Animação acontece quando o mouse está sobre o link
+      &:hover {
+        color: $cor-texto-claro; // Garante que a cor não mude de forma indesejada
+      }
+      
+      &:hover::after {
+        transform: scaleX(1); // Expande o sublinhado
+        transform-origin: bottom left;
+      }
+    }
+  }
+}
+
+
+// ===Display===
+.Display-main-div {
+
+  // Transforma o Display em um contêiner flexível
+  display: grid;
+
+  width: 100%;
+
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 100%;
+
+  justify-items: center;
+  // Adiciona um pouco de preenchimento para garantir que o app não toque as bordas
+  padding: 0px 10px;
+  box-sizing: border-box; // Garante que o padding não aumente o tamanho total
+}
+
+// ===Bar==
+.Bar-div {
+  width: 90%;
+  height: 10%;
+  background-color: $cor-barra;
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: -4px 4px 8px $sombra-barra;
+
+    // Botões da barra de apps
+    .App-button {
+    background-color: $cor-botao;
+    border: 4px solid $sombra-padrao;
+    padding: 4px 8px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 2px $sombra-padrao;
+    transition: 0.3s;
+    }
+    .App-button:hover {
+        transform: scale(1.1);
+    }
+    .App-button:active {
+        background-color: $cor-botao-ativo;
+        box-shadow: inset 2px 2px 2px $sombra-padrao;
+    }
+
+}
+// === TitleApp SCSS Melhorado ===
+.title-app {
+  margin: 0;
+  padding: 0.5em 1em; // Padding para dar mais respiro
+  display: flex;
+  align-items: center; // Alinha verticalmente o título e os botões
+  justify-content: space-between; // Empurra o título para a esquerda e os botões para a direita
+  font-size: 1.2rem;
+  color: $cor-texto-principal;
+  background-color: $cor-background-title;
+  user-select: none; // Impede a seleção de texto na barra de título
+
+  h2 {
+    margin: 0;
+    font-size: 1em; // Tamanho relativo à fonte do pai
+    font-weight: 500;
+  }
+
+  ul {
+    display: flex;
+    list-style: none; // Remove os marcadores da lista
+    margin: 0;
+    padding: 0;
+    gap: 0.6em; // Espaçamento moderno entre os botões
+  }
+
+  li {
+    // Não precisa de estilos específicos aqui
+  }
+
+  button {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%; // Deixa os botões redondos
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.6); // Cor para os ícones (x, +, -)
+    transition: all 0.2s ease-in-out; // Transição suave para todas as propriedades
+
+    // Esconde o texto, mas mantém acessível para leitores de tela
+    // Em um projeto real, usaríamos ícones SVG aqui.
+    text-indent: -9999px;
+
+    // Estilos específicos para cada botão
+    &.btn-close {
+      background-color: #ff5f56;
+    }
+    &.btn-maximize {
+      background-color: #27c93f;
+    }
+    &.btn-minimize {
+      background-color: #ffbd2e;
+    }
+
+    // Efeito ao passar o mouse
+    &:hover {
+      filter: brightness(1.15); // Deixa o botão um pouco mais brilhante
+      transform: scale(1.1); // Aumenta levemente o tamanho
+    }
+  }
+}
+
+.minAppsBar{
+  width: 100%;
+  display: flex;
+  justify-content: left;
+  gap: 10px;
+  justify-self: center;
+  align-items: center;
+  background-color: rgba(240, 248, 255, 0.4);
+  border-radius: 0px 0px 8px 8px;
+  padding: 0px 5px;
+  backdrop-filter: blur(16px);
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: show-to-top 0.3s ease;
+}
