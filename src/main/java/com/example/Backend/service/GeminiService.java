@@ -17,6 +17,10 @@ public class GeminiService {
     @Autowired // Injeta a instância de Gemini automaticamente
     private Gemini gemini;
 
+    /**
+     * @param prompt
+     * @return
+     */
     public String responseContent(GeminiRequest prompt){
         System.out.println(gemini.response(prompt).text());
         return gemini.response(prompt).text();

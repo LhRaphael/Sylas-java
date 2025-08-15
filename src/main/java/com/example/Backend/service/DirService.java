@@ -2,6 +2,7 @@ package com.example.Backend.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,17 @@ public class DirService {
     @Autowired
     private DirRepository dirRepository;
 
+    /**
+     * @return
+     */
     public List<Dir> listAll(){
         return dirRepository.findAll();
     }
 
+    /**
+     * @param email
+     * @return
+     */
     public List<String> allPathsUser(String email){
         List<String> paths = dirRepository.findAllByUserReference(email)
         .stream()
@@ -32,6 +40,10 @@ public class DirService {
     }
 
     // cria o diretório raiz para o usuário
+    /**
+     * @param email
+     * @return
+     */
     public Boolean createRoot(String email){
         if(!email.isEmpty()){
             Dir root = new Dir();
@@ -44,6 +56,11 @@ public class DirService {
         throw new IllegalAccessError("O email não foi devidamente preenchido");
     }
 
+    /**
+     * @param email
+     * @return
+     * @throws IllegalAccessException
+     */
     public Dir getRoot(String email) throws IllegalAccessException{
         Dir dir = dirRepository.findByUserReferenceAndPath(email, "r:");
         if(dir != null){
@@ -53,8 +70,12 @@ public class DirService {
     }
 
 
+    /**
+     * @param dirId
+     * @return
+     */
     public List<DirSig> listIdDirUser(String dirId){
-        Dir dir = getAtualDir(dirId);
+        Dir dir = getDir(dirId);
 
         // passa todos os subdiretórios para a lista
         List<DirSig> content = dir.getSubDirs()
@@ -63,8 +84,12 @@ public class DirService {
         return content;
     }
 
+    /**
+     * @param fileId
+     * @return
+     */
     public List<FileSig> listIdFileUser(String fileId){
-        Dir dir = getAtualDir(fileId);
+        Dir dir = getDir(fileId);
 
         //passa todos os arquivos do diretório para a lista
         List<FileSig> content = dir.getFiles()
@@ -74,6 +99,12 @@ public class DirService {
     }
 
     // verificar se um diretório pertence a um 
+    /**
+     * @param nameDir
+     * @param fatherDirId
+     * @return
+     * @throws IllegalArgumentException
+     */
     public Boolean matchDirNameCode(String nameDir, String fatherDirId) throws IllegalArgumentException{
         List<String> names = listIdDirUser(fatherDirId).stream().map(DirSig::getName).collect(Collectors.toList());
         if(names.contains(nameDir))
@@ -83,13 +114,21 @@ public class DirService {
     }
 
     // pwd
-    public Dir getAtualDir(String dirId){ // obtem o diretório atual que o usuário está
+    /**
+     * @param dirId
+     * @return
+     */
+    public Dir getDir(String dirId){ // obtem o diretório atual que o usuário está
         Dir dir = dirRepository.findById(dirId)
             .orElseThrow(() -> new IllegalArgumentException("Diretório não encontrado"));
         return dir;
     }
 
     // ls
+    /**
+     * @param dirId
+     * @return
+     */
     public List<Signature> listContentDir(String dirId){
         List<DirSig> dirs = listIdDirUser(dirId); // coletar os ids dos diretórios
         List<FileSig> files = listIdFileUser(dirId); // coletar os ids dos arquivos
@@ -101,8 +140,15 @@ public class DirService {
     }
     
     // cria um novo diretório: mkdir
+    /**
+     * @param dir
+     * @param dirAtualId
+     * @return
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     */
     public Dir createDir(Dir dir, String dirAtualId) throws IllegalArgumentException, IllegalAccessException {
-        Dir fatherDir = getAtualDir(dirAtualId);
+        Dir fatherDir = getDir(dirAtualId);
         if(!dir.getUserReference().equals(fatherDir.getUserReference())){
             throw new IllegalAccessException("O diretório não pertence ao usuário atual");
         }
@@ -117,7 +163,7 @@ public class DirService {
             }
         }
     
-        dir.setPath(fatherDir.getPath() + fatherDir.getName() + "/");
+        dir.setPath(fatherDir.getPath() + "/" + dir.getName());
 
         // verifica se o diretório já existe
         if(dirRepository.findByUserReferenceAndPathAndName(dir.getUserReference(), dir.getPath(), dir.getName()) != null){
@@ -137,9 +183,38 @@ public class DirService {
     }
 
     //cd
+    /**
+     * @param fatherId
+     * @param dirId
+     * @return
+     * @throws IllegalAccessException
+     */
     public Dir changeDir(String fatherId, String dirId) throws IllegalAccessException {
-        Dir dir = getAtualDir(dirId);
-        Dir dirAtual = getAtualDir(fatherId);
+        Dir dir = getDir(dirId);
+        Dir dirAtual = getDir(fatherId);
+
+        if(!dir.getUserReference().equals(dirAtual.getUserReference())){
+            throw new IllegalAccessException("O diretório não pertence ao usuário atual");
+        }
+
+        // // verifica se o diretório é um subdiretório do diretório atual
+        // if(!dir.getPath().startsWith(dirAtual.getPath())){
+        //     throw new IllegalAccessException("O diretório não é um subdiretório do diretório atual");
+        // }
+
+        return dir;
+    }
+
+    //rm
+    /**
+     * @param fatherId
+     * @param dirId
+     * @return
+     * @throws IllegalAccessException
+     */
+    public Dir rmDir(String fatherId, String dirId) throws IllegalAccessException{
+        Dir dir = getDir(dirId);
+        Dir dirAtual = getDir(fatherId);
 
         if(!dir.getUserReference().equals(dirAtual.getUserReference())){
             throw new IllegalAccessException("O diretório não pertence ao usuário atual");
@@ -150,7 +225,17 @@ public class DirService {
             throw new IllegalAccessException("O diretório não é um subdiretório do diretório atual");
         }
 
-        return dir;
+        List<Dir> allDirs = dirRepository.findAllByUserReference(dir.getUserReference());
+        allDirs.stream().forEach(d->{
+            if(d.getPath().startsWith(dir.getPath())){
+                dirRepository.delete(d);
+            }
+        });
+
+        dirRepository.delete(dir);
+        dirAtual.getSubDirs().removeIf(item -> item.getCode().equals(dir.getId()));
+
+        return dirRepository.save(dirAtual);
+
     }
-    
 }

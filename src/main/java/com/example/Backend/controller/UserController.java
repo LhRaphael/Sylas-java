@@ -27,9 +27,9 @@ public class UserController {
         return userService.listAll();
     }
     
-    @GetMapping("/{userId}")
-    public User findUser(@PathVariable String userId){
-        return userService.findUserId(userId);
+    @GetMapping("/{userEmail}")
+    public UserData findUser(@PathVariable String userEmail) throws IllegalAccessException{
+        return userService.findUserData(userEmail);
     }
     
     @PostMapping
