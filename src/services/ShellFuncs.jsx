@@ -169,6 +169,11 @@ export function helpCommand() {
             <li>help: Exibe esta mensagem de ajuda.</li>
             <li>clear: Limpa o terminal</li>
             <li>exit: Fecha o terminal</li>
+            <li>ls: Lista todos os diretórios e arquivos no local atual</li>
+            <li>pwd: Exibe o local atual</li>
+            <li>mkdir: Cria um novo diretório</li>
+            <li>cd: Navega para outro diretório</li>
+            <li>rmdir: Apaga o diretório com todo seu conteúdo</li>
         </ul>
     );
 }
@@ -179,7 +184,6 @@ export async function lsCommand(dirId) {
     const content = await axios.get(`http://127.0.0.1:8080/archives/ls/${dirId}`)
 
     if (content.status === 200) {
-        console.log(content.data)
         return content.data.map(item => item.name).join(' ');
     } else {
         return "Erro ao listar diretório.";
@@ -200,11 +204,11 @@ export async function mkdirCommand({nameDir, dirId, userEmail}){
     try{
         const response = await axios.post(`http://127.0.0.1:8080/archives/mkDir/${dirId}`, dir)
         if(response.status === 200 && response.data){
-            return response.data.path + response.data.name
+            return response.data.path
         }
         return "Error"
     }catch(error){
-        return error.response
+        return error.response.data.message
     }
 }
 
@@ -216,6 +220,33 @@ export async function cdCommand({fatherId, dirId}) {
         }
         return "erro"
     }catch(error){
-        return alert(error.response)
+        return alert(error.message)
+    }
+}
+
+export async function rmdirCommand({fatherId, dirId}){
+    try{
+        const response = await axios.delete(`http://127.0.0.1:8080/archives/rmdir/${fatherId}/${dirId}`)
+        if(response.status === 200 && response.data){
+            return response.data
+        }
+    }
+    catch(error){
+        return alert(`MEU AMIGO, FOI MUIDO ${error.message}`)
+    }
+}
+
+
+// TODO: elaborar toda a lógica de criação de arquivos no backend
+export async function generateFileCommand({DirId,Name,Type,Content}) {
+    const file = {
+        dirId: DirId,
+        name: Name,
+        type: Type,
+        content: Content
+    }
+
+    try{
+        const response = await axios.post(`http://127.0.0.1:8080/`)
     }
 }

@@ -162,6 +162,11 @@
   align-self: center;
   overflow: hidden;
 
+  .Shell-app-div{
+    width: 100%;
+    height: 100%;
+  }
+
   .Shell-content-div {
     flex: 1; // ocupa todo o espaço disponível dentro do Shell-main-div
     display: flex;
@@ -195,6 +200,35 @@
     }
 
   }
+}
+
+.Syfile-sh{
+
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  #syfile-textarea{
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    color: white;
+    font-family: monospace;
+    border: none;
+    outline: none;
+    padding: 10px;
+    resize: none; // Impede o redimensionamento manual
+    overflow-y: auto; // Permite rolagem vertical se o conteúdo for maior que a área visível
+  }
+
+  #syfile-commands{
+    display: flex;
+    justify-content: space-around;
+    color: #f8f8f2;
+    border-top: #f8f8f2 2px solid;
+  }
+
 }
 
 

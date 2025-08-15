@@ -12,6 +12,12 @@ function CreateUser(){
 
     const handleCreateUser = async (e) => {
         e.preventDefault();
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return alert("Email inválido!");
+        }
+        
         if(password !== confirmPassword){
             return alert("Passwords do not match");
         }

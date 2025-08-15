@@ -1,20 +1,23 @@
 import React from "react";
 import TitleApp from "../components/TitleApp";
+import SyfileSH from "./SyfileSH";
+
 import { useDisplay } from "../services/DisplayProvider";
-import { calcCommand, echoCommand, helpCommand, lsCommand, mkdirCommand, cdCommand} from "../services/ShellFuncs";
+import { calcCommand, echoCommand, helpCommand, lsCommand, mkdirCommand, cdCommand, rmdirCommand} from "../services/ShellFuncs";
 import { useUser } from "../services/UserProvider";
-import { updateUser } from "../services/UserUpdate";
+import { updateUserDir } from "../services/UserUpdate";
+import { set } from "nerdamer/nerdamer.core";
 
 function InputShell(){
     const {
 
         comands, setComands, ativoShell, 
         setAtivoShell, setOutputs, handleAppToggle, 
-        commandPointer, setCommandPointer
+        commandPointer, setCommandPointer, setShellApp
     
     } = useDisplay(); // Hook para acessar o contexto de exibição
 
-    const {user, setUser} = useUser() // Hook para acessar o contexto do usuário
+    const {user, setUser, dirPath, setDirPath, resetDir} = useUser() // Hook para acessar o contexto do usuário
 
     // salva o comando digitado e a saida do comando
     const saveResponse = (Command, Response) =>{
@@ -45,6 +48,7 @@ function InputShell(){
 
             case 'exit':
                 handleAppToggle("Shell")// fecha o terminal
+                resetDir(user.dir.id) // Reseta o diretório do usuário para o inicial
                 break
 
             case 'help':
@@ -64,25 +68,62 @@ function InputShell(){
             break
 
             case 'mkdir':
-                const mkdirResponse = mkdirCommand({nameDir: command, dirId: user.dir.id, userEmail: user.email})
+                const mkdirResponse = await mkdirCommand({nameDir: command, dirId: user.dir.id, userEmail: user.email})
                 saveResponse(command, mkdirResponse)
-                const updatedUser = await updateUser(user.id) // Atualiza o usuário após criar o diretório
-                setUser(updatedUser) // Atualiza o contexto do usuário com os novos dados
+                const updateDirUser = await updateUserDir(user.dir.id) // Atualiza o diretório do usuário após criar um novo diretório
+                user.dir = updateDirUser // Atualiza o diretório do usuário no estado
             break
 
             case 'cd':
                 //verifica se o diretório existe para o usuario atual
-                const dirId = user.dir.subDirs.find(item => item.name === commandTarget[1])
-                if(dirId.name != ""){
-                    const cdResponse = await cdCommand({fatherId: user.dir.id, dirId: dirId.code}) // retorna o novo diretório
-                    user.dir = cdResponse
-                    saveResponse(command,cdResponse.path) // exibe o caminho do diretório
-                }
-                else{
-                    console.log(user)
-                    return alert(commandTarget[1])
+                const dirIdCd = user.dir.subDirs.find(item => item.name === commandTarget[1])
+                if(dirIdCd != undefined){
+                    setDirPath(prev => [...prev, user.dir.id]) // Adiciona o caminho atual ao histórico de diretórios
+                    console.log(dirPath);
+
+                    const cdResponse = await cdCommand({fatherId: user.dir.id, dirId: dirIdCd.code}) // retorna o novo diretório
+                    setUser(prev => ({...prev, dir: cdResponse})) // Atualiza o diretório do usuário no estado
+                    saveResponse(command,cdResponse.path) 
                 }
 
+                else if(commandTarget[1] === ".." && dirPath.length > 0){
+                    const lastDirId = dirPath[dirPath.length - 1] // Pega o último diretório do histórico
+                    const cdBackResponse = await cdCommand({fatherId: user.dir.id, dirId: lastDirId}) // retorna o diretório pai
+                    setUser(prev => ({...prev, dir: cdBackResponse}))
+                    setDirPath(prev => prev.slice(0, -1)) // Remove o último diretório do histórico
+                    saveResponse(command, cdBackResponse.path) 
+                }
+
+                else if(commandTarget[1] === "/" || commandTarget[1] === "~" || commandTarget.length === 1){
+                    const cdRootResponse = resetDir(user.dir.id)
+                    saveResponse(command, cdRootResponse) 
+                }
+
+            break
+
+            case 'rmdir':
+                const dirIdRm = user.dir.subDirs.find(item => item.name === commandTarget[1])
+                if(dirIdRm != undefined){
+                    const rmResponse = await rmdirCommand({fatherId: user.dir.id, dirId:dirIdRm.code})
+                    setUser(prev => ({...prev, dir: rmResponse})) // Atualiza o diretório do usuário no estado
+                    setDirPath(prev => prev.filter(id => id !== dirIdRm.code)) // Remove o diretório removido do histórico
+                    saveResponse(command, rmResponse.path) // Adiciona a resposta do comando rmdir ao output
+                }
+            break
+
+            case 'syfile':
+                if(commandTarget.length < 2){
+                    saveResponse(command, "Erro: Nome do arquivo não fornecido.")
+                }
+                else{
+                    setShellApp(<SyfileSH nameFile={commandTarget[1]} />) // Define o app Shell como SyfileSH
+                    saveResponse(command, command) 
+                }
+            break
+                
+                
+            case 'user':
+                console.log(user)
             break
 
             default:
@@ -128,6 +169,19 @@ function InputShell(){
                 e.target.value = comands[commandPointer]
             }
         }
+        else if(e.key === "Tab"){
+            e.preventDefault(); // Previne o comportamento padrão do Tab
+            const inputValue = e.target.value.trim(); // Obtém o valor do input e remove espaços
+            if(inputValue) {
+                const commandTarget = inputValue.split(' ')[0]; // Extrai o comando principal
+                if(commandTarget === 'cd' || commandTarget === 'rmdir') {
+                    const suggestions = user.dir.subDirs.map(dir => dir.name).filter(name => name.startsWith(inputValue.split(' ')[1] || ''));
+                    if(suggestions.length > 0) {
+                        e.target.value = `${commandTarget} ${suggestions[0]}`; // Sugere o primeiro diretório que começa com o input
+                    }
+                }
+            }
+        }
         
     }
 
@@ -144,21 +198,27 @@ function InputShell(){
 
 function Shell({min, max}) {
 
-    const {outputs, ativoShell} = useDisplay(); // Hook para acessar o contexto de exibição
+    const {outputs, ativoShell, shellApp} = useDisplay(); // Hook para acessar o contexto de exibição
+    const {user, resetDir} = useUser() // Hook para acessar o contexto do usuário
 
     const focusInput = () =>{
         const input = document.querySelector('.Input-shell-div input');
         if(input) {
             input.focus(); // Foca no input quando a div é clicada
         }
-        console.log('Input focused');
     }
 
     return(
         <div className={`Shell-main-div ${min ? "minimized" : ""} ${max ? "maximized" : ""}`}>
-            <TitleApp title="Shell" Id="Shell"/>
-            <section className='Shell-content-div' onClick={focusInput}>
+            <TitleApp title="Shell" Id="Shell" optClose={()=>resetDir(user.dir.id)}/>
 
+            {/* caso um app de terminal for passado ele sera renderizado, caso não, conteúdo normal */}
+            {shellApp? (
+                <div className="Shell-app-div">
+                    {shellApp}
+                </div>
+            ):(
+                <section className='Shell-content-div' onClick={focusInput}>
                 {ativoShell && outputs.map((out) => (
                     <div key={out.id} className='Shell-command'>
                         <span>Sylas@Shell: </span>
@@ -169,6 +229,7 @@ function Shell({min, max}) {
                 ))}
                 <InputShell />
             </section>
+            )}
         </div>
     )
 }

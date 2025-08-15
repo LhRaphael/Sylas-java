@@ -8,7 +8,7 @@ function LoginContent() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const navigate = useNavigate()
-    const {setUser} = useUser()
+    const {setUser, setRootId} = useUser()
 
     const handlerFormLogin = async (e) => {
         
@@ -33,6 +33,7 @@ function LoginContent() {
             if (response.status === 200 && response.data) {
                 console.log(response.data)
                 setUser(response.data);
+                setRootId(response.data.dir.id);
                 return navigate('/home');
             } else {
                 alert("Erro inesperado no login.");

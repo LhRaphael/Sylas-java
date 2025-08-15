@@ -1,10 +1,13 @@
 // Home.jsx
 import React from 'react';
 import { DisplayProvider, useDisplay } from '../services/DisplayProvider';
+import { userNullVerify } from '../services/UserUpdate';
 import Display from '../components/Display';
 import Bar from '../components/Bar';
 import IA from '../apps/IA';
 import Shell from '../apps/Shell'; // Import the Shell app
+import { useUser } from '../services/UserProvider';
+import { useNavigate } from 'react-router-dom';
 
 function HomeContent() {
   const { appsAtivos, appsMinimizados, appMaximizado } = useDisplay();
@@ -28,15 +31,29 @@ function HomeContent() {
     </>
   );
 }
-
 function Home() {
-  return (
-    <main className="Home-main">
-      <DisplayProvider>
-        <HomeContent />
-      </DisplayProvider>
-    </main>
-  );
+  const { user } = useUser();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!userNullVerify(user.email)) {
+      navigate('/'); // redireciona só depois do render inicial
+    }
+  }, [user, navigate]);
+
+  if (userNullVerify(user.email)) {
+    return (
+      <main className="Home-main">
+        <DisplayProvider>
+          <HomeContent />
+        </DisplayProvider>
+      </main>
+    );
+  }
+
+  // Retorna null enquanto redireciona
+  return null;
 }
+
 
 export default Home;

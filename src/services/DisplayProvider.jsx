@@ -1,5 +1,6 @@
 // src/services/DisplayProvider.jsx
 
+import { set } from 'nerdamer/nerdamer.core';
 import { createContext, useContext, useState } from 'react';
 
 const DisplayContext = createContext();
@@ -8,7 +9,7 @@ export const DisplayProvider = ({ children }) => {
     
     // == Seção de Estados Globais ==
     const [appsAtivos, setAppsAtivos] = useState({}); // controla apps visíveis
-    const [appsMinimizados, setAppsMinimizados] = useState({}); // NOVO: controla apps minimizados
+    const [appsMinimizados, setAppsMinimizados] = useState({}); 
     const [appMaximizado, setAppMaximizado] = useState({}) // controla o app maximizado, pode haver apenas um
 
     // alterna a visibilidade do app (abrir/fechar)
@@ -24,7 +25,7 @@ export const DisplayProvider = ({ children }) => {
         if(appMaximizado[appName]){ // mesma coisa so que pro grande
             appMaximizado[appName] = false
         }
-        cleanContext(); // Limpa contextos de prompt e resposta ao fechar apps
+        cleanContext(); 
 
     };
     
@@ -57,6 +58,7 @@ export const DisplayProvider = ({ children }) => {
     const [outputs, setOutputs] = useState([]); // Estado para armazenar as saídas do Shell (na pratica armazena o comando usado e a resposta na forma de objeto)
     const [ativoShell, setAtivoShell] = useState(false); // Estado para controlar a visibilidade do app Shell
     const [commandPointer, setCommandPointer] = useState(0)
+    const [shellApp, setShellApp] = useState(null); // Estado para armazenar a referência do app Shell
 
 
     // == Fim da Seção de estado de apps ==
@@ -70,6 +72,7 @@ export const DisplayProvider = ({ children }) => {
         setOutputs([]); // Limpa as saidas do shell
         setAtivoShell(false); // Reseta o estado ativo do Shell
         setCommandPointer(0)
+        setShellApp(null); // Limpa a referência do app Shell
     }
 
     return (
@@ -95,7 +98,9 @@ export const DisplayProvider = ({ children }) => {
             ativoShell,
             setAtivoShell,
             commandPointer,
-            setCommandPointer
+            setCommandPointer,
+            shellApp,
+            setShellApp
 
 
         }}>
