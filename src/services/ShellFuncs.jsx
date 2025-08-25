@@ -165,7 +165,7 @@ export function helpCommand() {
     return (
         <ul>
             <li>echo: Exibe uma mensagem na tela. Ex.: echo Hello World</li>
-            <li>calc: Calcula expressões matemáticas. Ex.: calc [2+2]</li>
+            <li>calc: Calcula expressões matemáticas. Ex.: calc 2+2</li>
             <li>help: Exibe esta mensagem de ajuda.</li>
             <li>clear: Limpa o terminal</li>
             <li>exit: Fecha o terminal</li>
@@ -174,6 +174,8 @@ export function helpCommand() {
             <li>mkdir: Cria um novo diretório</li>
             <li>cd: Navega para outro diretório</li>
             <li>rmdir: Apaga o diretório com todo seu conteúdo</li>
+            <li>syfile: editor de texto. Ex.: syfile text.txt</li>
+            <li>cat: visualisar conteúdo de um arquivo</li>
         </ul>
     );
 }
@@ -184,7 +186,7 @@ export async function lsCommand(dirId) {
     const content = await axios.get(`http://127.0.0.1:8080/archives/ls/${dirId}`)
 
     if (content.status === 200) {
-        return content.data.map(item => item.name).join(' ');
+        return content.data.map(item => item.name).join('   ');
     } else {
         return "Erro ao listar diretório.";
     }
@@ -238,15 +240,34 @@ export async function rmdirCommand({fatherId, dirId}){
 
 
 // TODO: elaborar toda a lógica de criação de arquivos no backend
-export async function generateFileCommand({DirId,Name,Type,Content}) {
+export async function generateFileCommand({DirId,UserReference,Name,Type,Content}) {
     const file = {
         dirId: DirId,
+        userReference: UserReference,
         name: Name,
         type: Type,
         content: Content
     }
 
     try{
-        const response = await axios.post(`http://127.0.0.1:8080/`)
+        const response = await axios.post(`http://127.0.0.1:8080/archives/saveFile/${DirId}`, file);
+        if(response.status === 200 && response.data){
+            return response.data;
+        }
+        return "Erro ao criar arquivo.";
+    }catch(error) {
+
+        const al =  error.response ? error.response.data.message : "Erro ao criar arquivo.";
+        return alert(al);
     }
+}
+
+export async function catCommand({fileId}) {
+    const content = await axios.get(`http://127.0.0.1:8080/archives/getFile/${fileId}`)
+    if (content.status === 200) {
+        return content.data.content; // Retorna o conteúdo do arquivo
+    } else {
+        return "Erro ao ler o arquivo.";
+    }
+
 }
