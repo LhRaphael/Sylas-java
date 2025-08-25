@@ -3,10 +3,9 @@ import TitleApp from "../components/TitleApp";
 import SyfileSH from "./SyfileSH";
 
 import { useDisplay } from "../services/DisplayProvider";
-import { calcCommand, echoCommand, helpCommand, lsCommand, mkdirCommand, cdCommand, rmdirCommand} from "../services/ShellFuncs";
+import { calcCommand, echoCommand, helpCommand, lsCommand, mkdirCommand, cdCommand, rmdirCommand, catCommand} from "../services/ShellFuncs";
 import { useUser } from "../services/UserProvider";
 import { updateUserDir } from "../services/UserUpdate";
-import { set } from "nerdamer/nerdamer.core";
 
 function InputShell(){
     const {
@@ -112,15 +111,41 @@ function InputShell(){
             break
 
             case 'syfile':
-                if(commandTarget.length < 2){
-                    saveResponse(command, "Erro: Nome do arquivo não fornecido.")
+
+                if(commandTarget.length > 1){
+                    const archive = user.dir.files.find(item => item.name === commandTarget[1])
+                    // criação de um novo arquivo
+                    if(archive == undefined || archive == null){
+                        setShellApp(<SyfileSH nameFile={commandTarget[1]} content={""} />) 
+                        saveResponse(command, command) 
+                    }
+                    // editar um arquivo existente
+                    else{
+                        const fileContet = await catCommand({fileId: archive.code})
+                        setShellApp(<SyfileSH nameFile={commandTarget[1]} content={fileContet} />)
+                        saveResponse(command, command)
+                    }
                 }
                 else{
-                    setShellApp(<SyfileSH nameFile={commandTarget[1]} />) // Define o app Shell como SyfileSH
-                    saveResponse(command, command) 
+                    saveResponse(command, "Erro: Nome do arquivo não fornecido.")
+                } 
+            break
+
+            case 'cat':
+                if(commandTarget.length > 1){
+                    const archiveCat = user.dir.files.find(item => item.name === commandTarget[1])
+                    if(archiveCat != undefined){
+                        const fileContetCat = await catCommand({fileId: archiveCat.code})
+                        saveResponse(command, fileContetCat)
+                    }
+                    else{
+                        saveResponse(command, "Erro: Arquivo não encontrado.")
+                    }
+                }
+                else{
+                    saveResponse(command, "Erro: Nome do arquivo não fornecido.")
                 }
             break
-                
                 
             case 'user':
                 console.log(user)
@@ -180,6 +205,13 @@ function InputShell(){
                         e.target.value = `${commandTarget} ${suggestions[0]}`; // Sugere o primeiro diretório que começa com o input
                     }
                 }
+                else if(commandTarget === 'cat' || commandTarget === 'syfile') {
+                    const suggestions = user.dir.files.map(file => file.name).filter(name => name.startsWith(inputValue.split(' ')[1] || ''));
+                    if(suggestions.length > 0) {
+                        e.target.value = `${commandTarget} ${suggestions[0]}`; // Sugere o primeiro arquivo que começa com o input
+                    }
+                }
+
             }
         }
         
