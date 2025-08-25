@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.Backend.model.archives.Dir;
+import com.example.Backend.model.archives.File;
 import com.example.Backend.model.archives.Signature;
 import com.example.Backend.service.DirService;
+import com.example.Backend.service.FileService;
 
 @RestController
 @RequestMapping("/archives")
@@ -21,6 +23,9 @@ public class ArchiveController {
     // o root é criado no userService, na hora de criação do usuário no sistema
     @Autowired
     private DirService dirService;
+
+    @Autowired
+    private FileService fileService;
 
     /**
      * @param dirId
@@ -71,7 +76,23 @@ public class ArchiveController {
     public Dir createDirectory(@RequestBody Dir dir, @PathVariable String dirId) throws IllegalArgumentException, IllegalAccessException {
         return dirService.createDir(dir, dirId);
     }
+
+    /**
+     * @param file
+     * @param dirId
+     * @return
+     * @throws IllegalAccessException
+     */
+    @PostMapping("/saveFile/{dirId}")
+    public Dir saveFile(@RequestBody File file, @PathVariable String dirId) throws IllegalAccessException {
+        return fileService.saveFile(file, dirId);
+    }
     
+    @GetMapping("/getFile/{fileId}")
+    public File getFile(@PathVariable String fileId) throws IllegalAccessException {
+        return fileService.getFile(fileId);
+    }
+
     /**
      * @param fatherId
      * @param dirId

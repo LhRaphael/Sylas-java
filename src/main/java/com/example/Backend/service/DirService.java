@@ -2,7 +2,6 @@ package com.example.Backend.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +38,20 @@ public class DirService {
         return paths;
     }
 
+    /**
+     * @param dir
+     * @return
+     */
+    public Dir saveDir(Dir dir){
+        if(dir.getName() == null || dir.getName().isEmpty() && !dir.getPath().equals("r:")){
+            throw new IllegalArgumentException("O nome do diretório não pode ser vazio");
+        }
+        if(dir.getUserReference() == null || dir.getUserReference().isEmpty()){
+            throw new IllegalArgumentException("O email do usuário não pode ser vazio");
+        }
+        return dirRepository.save(dir);
+    }
+
     // cria o diretório raiz para o usuário
     /**
      * @param email
@@ -50,7 +63,7 @@ public class DirService {
             root.setName("");
             root.setPath("r:");
             root.setUserReference(email);
-            dirRepository.save(root);
+            this.saveDir(root);
             return true;
         }
         throw new IllegalAccessError("O email não foi devidamente preenchido");
@@ -170,7 +183,7 @@ public class DirService {
             throw new IllegalArgumentException("O diretório já existe");
         }
 
-        Dir finalDir = dirRepository.save(dir);
+        Dir finalDir = this.saveDir(dir);
         DirSig dirSig = new DirSig();
         
         dirSig.setCode(finalDir.getId());
@@ -179,7 +192,7 @@ public class DirService {
 
         fatherDir.getSubDirs().add(dirSig);
 
-        return dirRepository.save(fatherDir);
+        return this.saveDir(fatherDir);
     }
 
     //cd
@@ -235,7 +248,7 @@ public class DirService {
         dirRepository.delete(dir);
         dirAtual.getSubDirs().removeIf(item -> item.getCode().equals(dir.getId()));
 
-        return dirRepository.save(dirAtual);
+        return this.saveDir(dirAtual);
 
     }
 }
