@@ -14,7 +14,7 @@ function Header() {
       <h1>Sylas</h1>
       <nav>
         <Link to={homePath} className='Header-link'>{homeLabel}</Link>
-        <Link to="/sobre" className='Header-link'>Sobre</Link>
+        <Link to="/about" className='Header-link'>Sobre</Link>
         <Link to="/docs" className='Header-link'>Documentação</Link>
       </nav>
     </header>

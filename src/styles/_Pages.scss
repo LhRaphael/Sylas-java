@@ -153,6 +153,29 @@
   }
 }
 
+.About{
+  text-align: justify;
+  margin-top: 20px;
+  width: 50%;
+  margin: 10px auto;
+
+  h2{
+    color: $cor-relativa2;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  a {
+    color: $cor-botao;
+    text-decoration: none;
+    font-weight: bold;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .CreateUser-main > div {
     flex-direction: column;
